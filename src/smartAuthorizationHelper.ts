@@ -204,7 +204,7 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
             (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
             (expectedAudValue instanceof RegExp && expectedAudValue.test(audience)) ||
             (expectedAudValue instanceof Array && expectedAudValue.indexOf(audience) > -1)
-        )
+        );
     });
     if (!audMatch) {
         logger.error('access_token has unexpected `aud`');
