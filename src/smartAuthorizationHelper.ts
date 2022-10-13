@@ -180,11 +180,13 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp,
 
     const { aud = '', iss = '' } = decodedAccessToken.payload;
 
-    const removeTrailingSlash = (url:string) => (url[url.length-1] == "/") ? url = url.substr(0, url.length - 1) : url ;
+    const removeTrailingSlash = (url: string) => {
+        return url[url.length - 1] === '/' ? url.substr(0, url.length - 1) : url;
+    };
 
     if (removeTrailingSlash(expectedIssValue) !== removeTrailingSlash(iss)) {
-        logger.error(`expectedIss ${expectedIssValue}`); 
-        logger.error(`iss ${iss}`); 
+        logger.error(`expectedIss ${expectedIssValue}`);
+        logger.error(`iss ${iss}`);
         logger.error('access_token has unexpected `iss`');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
