@@ -171,7 +171,9 @@ export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
     });
 }
 
-export function decodeJwtToken(token: string, expectedAudValue: string | RegExp, expectedIssValue: string) {
+export function decodeJwtToken(token: string, expectedAudValue: string | RegExp | string[], expectedIssValue: string) {
+
+    console.log({token, expectedAudValue, expectedIssValue})
     const decodedAccessToken = decode(token, { complete: true });
     if (decodedAccessToken === null || typeof decodedAccessToken === 'string') {
         logger.warn('access_token could not be decoded into an object');
@@ -194,9 +196,15 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp,
         }
     }
     const audMatch: boolean = audArray.some(
-        (audience: string) =>
-            (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
-            (expectedAudValue instanceof RegExp && expectedAudValue.test(audience)),
+        (audience: string) => {
+
+            console.log("this is audience", audience); 
+            return (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
+            (expectedAudValue instanceof RegExp && expectedAudValue.test(audience) || 
+            (expectedAudValue instanceof Array &&  expectedAudValue.indexOf(audience) > -1) 
+            )
+        }
+   
     );
     if (!audMatch) {
         logger.warn('access_token has unexpected `aud`');
@@ -208,12 +216,13 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp,
 
 export async function verifyJwtToken(
     token: string,
-    expectedAudValue: string | RegExp,
+    expectedAudValue: string | RegExp | string[],
     expectedIssValue: string,
     client: JwksClient,
 ) {
     const decodedAccessToken = decodeJwtToken(token, expectedAudValue, expectedIssValue);
     const { kid } = decodedAccessToken.header;
+
     if (!kid) {
         logger.warn('JWT verification failed. JWT "kid" attribute is required in the header');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
@@ -223,7 +232,7 @@ export async function verifyJwtToken(
         const key = await client.getSigningKeyAsync(kid);
         return verify(token, key.getPublicKey(), { audience: expectedAudValue, issuer: expectedIssValue });
     } catch (e) {
-        logger.warn((e as any).message);
+        logger.error((e as any).message);
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 }

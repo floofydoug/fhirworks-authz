@@ -350,6 +350,7 @@ function getDefaultPayload(iat: number, exp: number, aud: string | string[], iss
         fhirUser: 'Practitioner/1234',
     };
 }
+
 async function getSignedJwt(
     payload: any,
     kid: string,
@@ -364,7 +365,7 @@ async function getSignedJwt(
 }
 
 describe('verifyJwt', () => {
-    const kid = 'abcd1234';
+    const kid = 'tFw4qFvj1wF297cvnAifN';
 
     let privateKey: KeyObject;
     let client: JwksClient;
@@ -384,6 +385,7 @@ describe('verifyJwt', () => {
     });
 
     const expectedAudValue = 'api://default';
+    const expectedAudArrayValue = ['api://default', 'https://test2']
     const expectedIssValue = 'https://exampleAuthServer.com/oauth2';
 
     test('JWT is valid and verified', async () => {
@@ -452,22 +454,32 @@ describe('verifyJwt', () => {
     });
 
     describe('aud is correct', () => {
-        const cases: (string | string[])[][] = [
-            ['Single correct aud value', expectedAudValue],
-            ['Aud array contain expected aud value', ['aud1', expectedAudValue]],
-        ];
-        test.each(cases)('CASE: %p', async (testCase, aud) => {
+
+        test('aud is valid as a string url', async ()=> {
+            const aud = 'api://default';
+
             const payload = getDefaultPayload(
                 Math.floor(Date.now() / 1000),
                 Math.floor(Date.now() / 1000) + 10,
-                aud,
+                aud, 
                 expectedIssValue,
-            );
-            const jwt = await getSignedJwt(payload, kid, privateKey);
-            return expect(
-                verifyJwtToken(jwt, expectedAudValue, 'https://exampleAuthServer.com/oauth2', client),
-            ).resolves.toEqual(payload);
-        });
+            ); 
+
+            const jwt = await getSignedJwt(payload, kid, privateKey); 
+            return expect(verifyJwtToken(jwt, aud, expectedIssValue, client)).resolves.toEqual(payload); 
+        })
+
+        test('aud array contain expected aud value', async () => {
+            const payload = getDefaultPayload(
+                Math.floor(Date.now() / 1000),
+                Math.floor(Date.now() / 1000) + 10,
+                expectedAudArrayValue, 
+                expectedIssValue
+            )
+
+            const jwt = await getSignedJwt(payload, kid, privateKey); 
+            return expect(verifyJwtToken(jwt, expectedAudArrayValue, expectedIssValue, client)).resolves.toEqual(payload); 
+        })
 
         test('aud provided as RegExp', async () => {
             const aud = 'api://default';
