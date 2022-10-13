@@ -208,6 +208,7 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
     });
     if (!audMatch) {
         logger.error('access_token has unexpected `aud`');
+        logger.error('expected: ', expectedAudValue);
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
@@ -239,7 +240,7 @@ export async function verifyJwtToken(
 
 export async function introspectJwtToken(
     token: string,
-    expectedAudValue: string | RegExp,
+    expectedAudValue: string | RegExp | string[],
     expectedIssValue: string,
     introspectionOptions: IntrospectionOptions,
 ) {
