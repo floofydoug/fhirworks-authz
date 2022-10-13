@@ -202,8 +202,7 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
     const audMatch: boolean = audArray.some((audience: string) => {
         return (
             (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
-            (expectedAudValue instanceof RegExp && expectedAudValue.test(audience)) ||
-            (expectedAudValue instanceof Array && expectedAudValue.indexOf(audience) > -1)
+            (expectedAudValue instanceof RegExp && expectedAudValue.test(audience))
         );
     });
     if (!audMatch) {
@@ -239,7 +238,7 @@ export async function verifyJwtToken(
         logger.error(`this is publicKey:  ${publicKey}`);
         return verify(token, publicKey, { audience: expectedAudValue, issuer: expectedIssValue });
     } catch (e) {
-        logger.error(e);
+        logger.error(`custom error in verifyJwt ${JSON.stringify(e)}`);
         logger.error((e as any).message);
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
