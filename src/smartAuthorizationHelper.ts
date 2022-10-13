@@ -223,7 +223,7 @@ export async function verifyJwtToken(
 ) {
     const decodedAccessToken = decodeJwtToken(token, expectedAudValue, expectedIssValue);
     const { kid } = decodedAccessToken.header;
-
+    logger.error(`kid ${kid}`);
     if (!kid) {
         logger.error('JWT verification failed. JWT "kid" attribute is required in the header');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
@@ -231,8 +231,10 @@ export async function verifyJwtToken(
 
     try {
         const key = await client.getSigningKeyAsync(kid);
+        logger.error(`Inside verifyJwtToken. Key: ${key}`);
         return verify(token, key.getPublicKey(), { audience: expectedAudValue, issuer: expectedIssValue });
     } catch (e) {
+        logger.error(e);
         logger.error((e as any).message);
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
@@ -263,10 +265,14 @@ export async function introspectJwtToken(
             },
         });
         if (!response.data.active) {
+            logger.error(`response ${response}`);
+            logger.error('response data active not available');
             throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
         }
         return decodedTokenPayload;
     } catch (e) {
+        logger.error('generic introspection error');
+        logger.error(e);
         if (axios.isAxiosError(e)) {
             if (e.response) {
                 logger.error(`Status received from introspection call: ${e.response.status}`);
