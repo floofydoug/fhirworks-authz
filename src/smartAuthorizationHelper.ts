@@ -173,7 +173,6 @@ export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
 
 export function decodeJwtToken(token: string, expectedAudValue: string | RegExp | string[], expectedIssValue: string) {
 
-    console.log({token, expectedAudValue, expectedIssValue})
     const decodedAccessToken = decode(token, { complete: true });
     if (decodedAccessToken === null || typeof decodedAccessToken === 'string') {
         logger.warn('access_token could not be decoded into an object');
