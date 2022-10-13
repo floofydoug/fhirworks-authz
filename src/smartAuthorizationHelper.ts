@@ -172,7 +172,6 @@ export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
 }
 
 export function decodeJwtToken(token: string, expectedAudValue: string | RegExp | string[], expectedIssValue: string) {
-
     const decodedAccessToken = decode(token, { complete: true });
     if (decodedAccessToken === null || typeof decodedAccessToken === 'string') {
         logger.warn('access_token could not be decoded into an object');
@@ -194,16 +193,13 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
             audArray = aud;
         }
     }
-    const audMatch: boolean = audArray.some(
-        (audience: string) => {
-
-            return (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
-                   (expectedAudValue instanceof RegExp && expectedAudValue.test(audience)  || 
-                   (expectedAudValue instanceof Array &&  expectedAudValue.indexOf(audience) > -1) 
-            )
-        }
-   
-    );
+    const audMatch: boolean = audArray.some((audience: string) => {
+        return (
+            (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
+            (expectedAudValue instanceof RegExp && expectedAudValue.test(audience)) ||
+            (expectedAudValue instanceof Array && expectedAudValue.indexOf(audience) > -1)
+        );
+    });
     if (!audMatch) {
         logger.warn('access_token has unexpected `aud`');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);

@@ -385,7 +385,7 @@ describe('verifyJwt', () => {
     });
 
     const expectedAudValue = 'api://default';
-    const expectedAudArrayValue = ['api://default', 'https://test2']
+    const expectedAudArrayValue = ['api://default', 'https://test2'];
     const expectedIssValue = 'https://exampleAuthServer.com/oauth2';
 
     test('JWT is valid and verified', async () => {
@@ -454,32 +454,33 @@ describe('verifyJwt', () => {
     });
 
     describe('aud is correct', () => {
-
-        test('aud is valid as a string url', async ()=> {
+        test('aud is valid as a string url', async () => {
             const aud = 'api://default';
 
             const payload = getDefaultPayload(
                 Math.floor(Date.now() / 1000),
                 Math.floor(Date.now() / 1000) + 10,
-                aud, 
+                aud,
                 expectedIssValue,
-            ); 
+            );
 
-            const jwt = await getSignedJwt(payload, kid, privateKey); 
-            return expect(verifyJwtToken(jwt, aud, expectedIssValue, client)).resolves.toEqual(payload); 
-        })
+            const jwt = await getSignedJwt(payload, kid, privateKey);
+            return expect(verifyJwtToken(jwt, aud, expectedIssValue, client)).resolves.toEqual(payload);
+        });
 
         test('aud array contain expected aud value', async () => {
             const payload = getDefaultPayload(
                 Math.floor(Date.now() / 1000),
                 Math.floor(Date.now() / 1000) + 10,
-                expectedAudArrayValue, 
-                expectedIssValue
-            )
+                expectedAudArrayValue,
+                expectedIssValue,
+            );
 
-            const jwt = await getSignedJwt(payload, kid, privateKey); 
-            return expect(verifyJwtToken(jwt, expectedAudArrayValue, expectedIssValue, client)).resolves.toEqual(payload); 
-        })
+            const jwt = await getSignedJwt(payload, kid, privateKey);
+            return expect(verifyJwtToken(jwt, expectedAudArrayValue, expectedIssValue, client)).resolves.toEqual(
+                payload,
+            );
+        });
 
         test('aud provided as RegExp', async () => {
             const aud = 'api://default';
