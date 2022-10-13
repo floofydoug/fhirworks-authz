@@ -396,7 +396,7 @@ describe('verifyJwt', () => {
             expectedIssValue,
         );
         const jwt = await getSignedJwt(payload, kid, privateKey);
-        return expect(verifyJwtToken(jwt, expectedAudValue, expectedIssValue, client)).resolves.toEqual(payload);
+        return expect(verifyJwtToken(jwt, expectedAudArrayValue, expectedIssValue, client)).resolves.toEqual(payload);
     });
 
     test('JWT does not include "kid" attribute in header', async () => {

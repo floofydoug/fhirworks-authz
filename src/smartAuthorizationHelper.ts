@@ -222,6 +222,9 @@ export async function verifyJwtToken(
     client: JwksClient,
 ) {
     const decodedAccessToken = decodeJwtToken(token, expectedAudValue, expectedIssValue);
+    logger.error(`this is aud: ${expectedAudValue}`);
+    logger.error(`this is expectedIssValue: ${expectedIssValue}`);
+    logger.error(`HELLO decodedAccessToken: ${JSON.stringify(decodedAccessToken)}`);
     const { kid } = decodedAccessToken.header;
     logger.error(`kid ${kid}`);
     if (!kid) {
@@ -231,8 +234,10 @@ export async function verifyJwtToken(
 
     try {
         const key = await client.getSigningKeyAsync(kid);
-        logger.error(`Inside verifyJwtToken. Key: ${key}`);
-        return verify(token, key.getPublicKey(), { audience: expectedAudValue, issuer: expectedIssValue });
+        logger.error(`Inside verifyJwtToken. Key: ${JSON.stringify(key)}`);
+        const publicKey = key.getPublicKey();
+        logger.error(`this is publicKey:  ${publicKey}`);
+        return verify(token, publicKey, { audience: expectedAudValue, issuer: expectedIssValue });
     } catch (e) {
         logger.error(e);
         logger.error((e as any).message);

@@ -99,6 +99,7 @@ export class SMARTHandler implements Authorization {
     async verifyAccessToken(request: VerifyAccessTokenRequest): Promise<UserIdentity> {
         let decodedToken: any;
         if (this.config.tokenIntrospection) {
+            logger.error(`did we get into introspection? ${JSON.stringify(this.config)}`);
             decodedToken = await introspectJwtToken(
                 request.accessToken,
                 this.config.expectedAudValue,
@@ -106,6 +107,7 @@ export class SMARTHandler implements Authorization {
                 this.config.tokenIntrospection,
             );
         } else if (this.jwksClient) {
+            logger.error(`or do we fall into jwksClient? ${JSON.stringify(this.config)}`);
             decodedToken = await verifyJwtToken(
                 request.accessToken,
                 this.config.expectedAudValue,
