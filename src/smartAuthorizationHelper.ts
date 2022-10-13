@@ -174,14 +174,14 @@ export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
 export function decodeJwtToken(token: string, expectedAudValue: string | RegExp, expectedIssValue: string) {
     const decodedAccessToken = decode(token, { complete: true });
     if (decodedAccessToken === null || typeof decodedAccessToken === 'string') {
-        logger.warn('access_token could not be decoded into an object');
+        logger.error('access_token could not be decoded into an object');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
     const { aud, iss } = decodedAccessToken.payload;
 
     if (expectedIssValue !== iss) {
-        logger.warn('access_token has unexpected `iss`');
+        logger.error('access_token has unexpected `iss`');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
@@ -199,7 +199,7 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp,
             (expectedAudValue instanceof RegExp && expectedAudValue.test(audience)),
     );
     if (!audMatch) {
-        logger.warn('access_token has unexpected `aud`');
+        logger.error('access_token has unexpected `aud`');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
@@ -215,7 +215,7 @@ export async function verifyJwtToken(
     const decodedAccessToken = decodeJwtToken(token, expectedAudValue, expectedIssValue);
     const { kid } = decodedAccessToken.header;
     if (!kid) {
-        logger.warn('JWT verification failed. JWT "kid" attribute is required in the header');
+        logger.error('JWT verification failed. JWT "kid" attribute is required in the header');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
@@ -223,7 +223,7 @@ export async function verifyJwtToken(
         const key = await client.getSigningKeyAsync(kid);
         return verify(token, key.getPublicKey(), { audience: expectedAudValue, issuer: expectedIssValue });
     } catch (e) {
-        logger.warn((e as any).message);
+        logger.error((e as any).message);
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 }
@@ -259,11 +259,11 @@ export async function introspectJwtToken(
     } catch (e) {
         if (axios.isAxiosError(e)) {
             if (e.response) {
-                logger.warn(`Status received from introspection call: ${e.response.status}`);
-                logger.warn(e.response.data);
+                logger.error(`Status received from introspection call: ${e.response.status}`);
+                logger.error(e.response.data);
             }
         } else {
-            logger.warn((e as any).message);
+            logger.error((e as any).message);
         }
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
