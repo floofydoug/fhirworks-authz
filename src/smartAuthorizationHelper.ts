@@ -199,12 +199,13 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
             audArray = aud;
         }
     }
-    const audMatch: boolean = audArray.some(
-        (audience: string) =>
+    const audMatch: boolean = audArray.some((audience: string) => {
+        return (
             (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
             (expectedAudValue instanceof RegExp && expectedAudValue.test(audience)) ||
-            (expectedAudValue instanceof Array && expectedAudValue.indexOf(audience) > -1),
-    );
+            (expectedAudValue instanceof Array && expectedAudValue.indexOf(audience) > -1)
+        )
+    });
     if (!audMatch) {
         logger.error('access_token has unexpected `aud`');
         logger.error('expected: ', expectedAudValue);
@@ -216,12 +217,13 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
 
 export async function verifyJwtToken(
     token: string,
-    expectedAudValue: string | RegExp,
+    expectedAudValue: string | RegExp | string[],
     expectedIssValue: string,
     client: JwksClient,
 ) {
     const decodedAccessToken = decodeJwtToken(token, expectedAudValue, expectedIssValue);
     const { kid } = decodedAccessToken.header;
+
     if (!kid) {
         logger.error('JWT verification failed. JWT "kid" attribute is required in the header');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
