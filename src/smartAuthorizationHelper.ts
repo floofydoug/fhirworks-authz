@@ -178,7 +178,7 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp,
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
-    const { aud, iss } = decodedAccessToken.payload;
+    const { aud = '', iss = '' } = decodedAccessToken.payload;
 
     const removeTrailingSlash = (url:string) => (url[url.length-1] == "/") ? url = url.substr(0, url.length - 1) : url ;
 
