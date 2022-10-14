@@ -125,7 +125,9 @@ export class SMARTHandler implements Authorization {
         const fhirServiceBaseUrl = request.fhirServiceBaseUrl ?? this.apiUrl;
 
         // get just the scopes that apply to this request
+        logger.error(`SCOPE KEY, ${this.config.scopeKey}`);
         const scopes = getScopes(decodedToken[this.config.scopeKey]);
+        logger.error(`SCOPES BEFORE ${JSON.stringify(scopes)}`);
         const usableScopes = filterOutUnusableScope(
             scopes,
             this.config.scopeRule,
@@ -136,6 +138,10 @@ export class SMARTHandler implements Authorization {
             patientContextClaim,
             fhirUserClaim,
         );
+        logger.error(`this.config.scopeRule${JSON.stringify(this.config.scopeRule)}`);
+        logger.error(`this.isUserScopeAllowedForSystemExport ${this.isUserScopeAllowedForSystemExport}`);
+        logger.error(`fhirUserClaimfhirUserClaim ${JSON.stringify(fhirUserClaim)}`);
+        logger.error(`patientContextClaim ${patientContextClaim}`);
         if (!usableScopes.length) {
             logger.error(
                 'User supplied scopes are insufficient',
