@@ -161,7 +161,7 @@ export function hasAccessToResource(
     );
 }
 export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
-    console.log(
+    logger.error(
         `these are the jwks parameters, ${{
             cache: true,
             cacheMaxEntries: 5,
