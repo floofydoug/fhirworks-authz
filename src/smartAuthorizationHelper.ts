@@ -162,7 +162,7 @@ export function hasAccessToResource(
 }
 export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
     logger.error(
-        `these are the jwks parameters, ${{
+        `these are the jwks parameters, ${JSON.stringify({
             cache: true,
             cacheMaxEntries: 5,
             cacheMaxAge: 600000,
@@ -170,7 +170,7 @@ export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
             jwksRequestsPerMinute: 10,
             requestHeaders: headers,
             jwksUri,
-        }}`,
+        })}`,
     );
     return jwksClient({
         cache: true,

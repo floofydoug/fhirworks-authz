@@ -137,11 +137,11 @@ export class SMARTHandler implements Authorization {
             fhirUserClaim,
         );
         if (!usableScopes.length) {
-            logger.warn('User supplied scopes are insufficient', {
+            logger.error('User supplied scopes are insufficient', JSON.stringify({
                 usableScopes,
                 operation: request.operation,
                 resourceType: request.resourceType,
-            });
+            }));
             throw new UnauthorizedError('access_token does not have permission for requested operation');
         }
         const userIdentity: UserIdentity = clone(decodedToken);
