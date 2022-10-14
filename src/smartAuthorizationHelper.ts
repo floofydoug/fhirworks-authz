@@ -6,6 +6,7 @@ import { FhirVersion, UnauthorizedError } from 'fhir-works-on-aws-interface';
 import jwksClient, { JwksClient, Headers } from 'jwks-rsa';
 import { decode, verify } from 'jsonwebtoken';
 import axios from 'axios';
+import { get } from 'lodash';
 import resourceReferencesMatrixV4 from './schema/fhirResourceReferencesMatrix.v4.0.1.json';
 import resourceReferencesMatrixV3 from './schema/fhirResourceReferencesMatrix.v3.0.1.json';
 import { AccessModifier, FhirResource, IntrospectionOptions } from './smartConfig';
@@ -160,6 +161,17 @@ export function hasAccessToResource(
     );
 }
 export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
+    logger.error(
+        `these are the jwks parameters, ${{
+            cache: true,
+            cacheMaxEntries: 5,
+            cacheMaxAge: 600000,
+            rateLimit: true,
+            jwksRequestsPerMinute: 10,
+            requestHeaders: headers,
+            jwksUri,
+        }}`,
+    );
     return jwksClient({
         cache: true,
         cacheMaxEntries: 5,
@@ -211,7 +223,13 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
-    return decodedAccessToken;
+    console.log('this is the decoded AccessToken', decodedAccessToken);
+
+    const formattedAccessToken = { ...decodedAccessToken };
+    formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
+
+    console.log('this is formattedAccessTokenNow', formattedAccessToken);
+    return formattedAccessToken;
 }
 
 export async function verifyJwtToken(

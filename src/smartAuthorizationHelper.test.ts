@@ -335,19 +335,17 @@ describe('hasReferenceToResource', () => {
     });
 });
 
+// eslint-ignore
 function getDefaultPayload(iat: number, exp: number, aud: string | string[], iss: string | string[]) {
     return {
         ver: 1,
-        jti: 'AT.6a7kncTCpu1X9eo2QhH1z_WLUK4TyV43n_9I6kZNwPY',
         iss,
         aud,
-        iat,
-        exp,
-        cid: '0oa8muazKSyk9gP5y5d5',
-        uid: '00u85ozwjjWRd17PB5d5',
-        scp: ['fhirUser', 'openid', 'profile', 'launch/encounter', 'patient/Patient.read'],
+        iat: 1665703012,
+        exp: 1665789412,
+        azp: 'i8Fx6ipnZSgYugn9XDwoA5zZIXCm42ry',
+        scope: 'fhirUser openid profile launch/encounter patient/Patient.read',
         sub: 'test@test.com',
-        fhirUser: 'Practitioner/1234',
     };
 }
 
@@ -376,7 +374,7 @@ describe('verifyJwt', () => {
         privateKey = <KeyObject>keyPair.privateKey;
         const jwk = { ...(await fromKeyLike(publicKey)), kid };
         client = jwksClient({
-            jwksUri: 'http://exampleAuthServer.com/oauth2',
+            jwksUri: 'https://smart-moyae-dev.us.auth0.com',
             getKeysInterceptor: (cb) => {
                 // @ts-ignore
                 return cb(null, [jwk]);
@@ -385,14 +383,18 @@ describe('verifyJwt', () => {
     });
 
     const expectedAudValue = 'api://default';
-    const expectedAudArrayValue = ['api://default', 'https://test2'];
-    const expectedIssValue = 'https://exampleAuthServer.com/oauth2';
+    const expectedAudArrayValue =
+        /^https:\/\/fg93b2lt5i\.execute\x2dapi\.us\x2deast\x2d1\.amazonaws\.com\/dev(\/tenant\/([a-zA-Z0-9\-_]{1,64}))?$/;
+    const expectedIssValue = 'https://smart-moyae-dev.us.auth0.com/';
 
     test('JWT is valid and verified', async () => {
         const payload = getDefaultPayload(
             Math.floor(Date.now() / 1000),
             Math.floor(Date.now() / 1000) + 10,
-            expectedAudValue,
+            [
+                'https://fg93b2lt5i.execute-api.us-east-1.amazonaws.com/dev/tenant/sitetenant',
+                'https://smart-moyae-dev.us.auth0.com/userinfo',
+            ],
             expectedIssValue,
         );
         const jwt = await getSignedJwt(payload, kid, privateKey);
