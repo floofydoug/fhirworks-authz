@@ -115,9 +115,8 @@ export function hasReferenceToResource(
 }
 
 export function isFhirUserAdmin(fhirUser: FhirResource, adminAccessTypes: string[], apiUrl: string): boolean {
-
-    logger.error(`inside isFhirUserAdmin, ${JSON.stringify(fhirUser)}`)
-    logger.error(`apiUrl: ${apiUrl}`)
+    logger.error(`inside isFhirUserAdmin, ${JSON.stringify(fhirUser)}`);
+    logger.error(`apiUrl: ${apiUrl}`);
 
     return apiUrl === fhirUser.hostname && adminAccessTypes.includes(fhirUser.resourceType);
 }
@@ -156,8 +155,6 @@ export function hasAccessToResource(
     fhirVersion: FhirVersion,
     accessModifier: AccessModifier,
 ): boolean {
-
-
     return (
         hasSystemAccess(usableScopes, sourceResource.resourceType, accessModifier) ||
         (fhirUserObject &&

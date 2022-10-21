@@ -19,7 +19,7 @@ import {
     SearchFilter,
     clone,
 } from 'fhir-works-on-aws-interface';
-import { get, find }  from 'lodash';
+import { get } from 'lodash';
 import { JwksClient } from 'jwks-rsa';
 import { SMARTConfig, UserIdentity } from './smartConfig';
 import {
@@ -123,11 +123,9 @@ export class SMARTHandler implements Authorization {
         logger.error(`THIS IS decodedToken after falling into jwksclient: ${JSON.stringify(decodedToken)}`);
         const fhirUserClaim = get(decodedToken, this.config.fhirUserClaimPath);
         const patientContextClaim = get(decodedToken, `${this.config.launchContextPathPrefix}patient`);
-        // const fhirUserClaimStartIndex = decodedToken[this.config.scopeKey].indexOf(this.config.fhirUserClaimPath); 
+        // const fhirUserClaimStartIndex = decodedToken[this.config.scopeKey].indexOf(this.config.fhirUserClaimPath);
         // const patientContextClaimStartIndex = decodedToken[this.config.scopeKey].indexOf(`${this.config.launchContextPathPrefix}patient`);
         const fhirServiceBaseUrl = request.fhirServiceBaseUrl ?? this.apiUrl;
-
-
 
         // get just the scopes that apply to this request
         logger.error(`SCOPE KEY, ${this.config.scopeKey}`);
@@ -135,8 +133,7 @@ export class SMARTHandler implements Authorization {
 
         // scopes.forEach( scope => {
         //     if(scope.substring(''))
-        // }) 
-
+        // })
 
         logger.error(`SCOPES BEFORE ${JSON.stringify(scopes)}`);
         const usableScopes = filterOutUnusableScope(
@@ -269,7 +266,7 @@ export class SMARTHandler implements Authorization {
                 scope.startsWith('system/'),
         );
 
-        logger.error(`inside isBundleRequest Authorized: ${usableScopes}`)
+        logger.error(`inside isBundleRequest Authorized: ${usableScopes}`);
 
         // Are the scopes the request have good enough for every entry in the bundle?
         request.requests.forEach((req: BatchReadWriteRequest) => {
@@ -295,8 +292,7 @@ export class SMARTHandler implements Authorization {
 
         // Ensure the requestor has access to write this request
         const authWritePromises: Promise<void>[] = request.requests.map((req) => {
-
-            logger.error(`this is the req inside of authWritePromises, ${JSON.stringify(req)}`); 
+            logger.error(`this is the req inside of authWritePromises, ${JSON.stringify(req)}`);
             if (['create', 'update', 'patch', 'delete'].includes(req.operation)) {
                 return this.isWriteRequestAuthorized(<WriteRequestAuthorizedRequest>{
                     userIdentity: { ...request.userIdentity, usableScopes },
@@ -352,7 +348,7 @@ export class SMARTHandler implements Authorization {
 
         const { operation, readResponse } = request;
 
-        console.log()
+        console.log();
         // If request is a search iterate over every response object
         // Must use all scopes, since a search may return more resourceTypes than just found in usableScopes
         if (SEARCH_OPERATIONS.includes(operation)) {
@@ -410,8 +406,8 @@ export class SMARTHandler implements Authorization {
         const { fhirUserObject, patientLaunchContext, usableScopes } = request.userIdentity;
         const fhirServiceBaseUrl = request.fhirServiceBaseUrl ?? this.apiUrl;
 
-        logger.error(`this is inside line 411, ${JSON.stringify(fhirUserObject)}` ); 
-        logger.error(`this is the request, ${JSON.stringify(request)}`); 
+        logger.error(`this is inside line 411, ${JSON.stringify(fhirUserObject)}`);
+        logger.error(`this is the request, ${JSON.stringify(request)}`);
         if (
             hasAccessToResource(
                 fhirUserObject,
