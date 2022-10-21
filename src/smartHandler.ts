@@ -410,7 +410,7 @@ export class SMARTHandler implements Authorization {
         const { fhirUserObject, patientLaunchContext, usableScopes } = request.userIdentity;
         const fhirServiceBaseUrl = request.fhirServiceBaseUrl ?? this.apiUrl;
 
-    logger.error(`this is inside line 411, ${JSON.stringify(fhirUserObject)}` ); 
+        logger.error(`this is inside line 411, ${JSON.stringify(fhirUserObject)}` ); 
         logger.error(`this is the request, ${JSON.stringify(request)}`); 
         if (
             hasAccessToResource(
