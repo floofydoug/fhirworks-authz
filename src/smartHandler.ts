@@ -150,6 +150,7 @@ export class SMARTHandler implements Authorization {
         logger.error(`this.isUserScopeAllowedForSystemExport ${this.isUserScopeAllowedForSystemExport}`);
         logger.error(`fhirUserClaimfhirUserClaim ${JSON.stringify(fhirUserClaim)}`);
         logger.error(`patientContextClaim ${patientContextClaim}`);
+        console.log(`usable scopes ${JSON.stringify(usableScopes)}`); 
         if (!usableScopes.length) {
             logger.error(
                 'User supplied scopes are insufficient',
