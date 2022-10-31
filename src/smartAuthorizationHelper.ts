@@ -165,13 +165,13 @@ export function hasAccessToResource(
     console.log('this is fhirUSEROBJECT inside hasAccessToResource', JSON.stringify(fhirUserObject)); 
     console.log('patientLaunchContext', patientLaunchContext); 
     console.log('usableScopes', usableScopes); 
-    console.log('sourceResource.resourceType'); 
+    console.log('sourceResource.resourceType', sourceResource); 
     console.log('accessModifier', accessModifier); 
 
     return (
         hasSystemAccess(usableScopes, sourceResource.resourceType, accessModifier) ||
-        (fhirUserObject && (isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl)) ||
-        hasReferenceToResource(fhirUserObject, sourceResource, apiUrl, fhirVersion)) ||
+        (fhirUserObject && (isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl))) ||
+        hasReferenceToResource(fhirUserObject, sourceResource, apiUrl, fhirVersion) ||
         (patientLaunchContext && hasReferenceToResource(patientLaunchContext, sourceResource, apiUrl, fhirVersion))
     );
 }

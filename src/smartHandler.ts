@@ -181,7 +181,8 @@ export class SMARTHandler implements Authorization {
             }
         }
 
-        if (fhirUserClaim && usableScopes.some((scope) => scope.startsWith('user/'))) {
+        if (fhirUserClaim) {
+            console.log("we are trying to find the user")
             userIdentity.fhirUserObject = getFhirUser(fhirUserClaim);
         }
         if (patientContextClaim && usableScopes.some((scope) => scope.startsWith('patient/'))) {
@@ -346,6 +347,9 @@ export class SMARTHandler implements Authorization {
 
     async authorizeAndFilterReadResponse(request: ReadResponseAuthorizedRequest): Promise<any> {
         const { fhirUserObject, patientLaunchContext, usableScopes, scopes } = request.userIdentity;
+
+        console.log('hey hey hey, this is inside authorizeAndFilterReadResponse', JSON.stringify(request.userIdentity))
+
         const fhirServiceBaseUrl = request.fhirServiceBaseUrl ?? this.apiUrl;
 
         const { operation, readResponse } = request;
