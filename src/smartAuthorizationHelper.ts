@@ -31,6 +31,10 @@ export function getFhirUser(fhirUserValue: string): FhirResource {
 }
 export function getFhirResource(resourceValue: string, defaultHostname: string): FhirResource {
     const match = resourceValue.match(FHIR_RESOURCE_REGEX);
+    logger.error(`defaultHostName: ${defaultHostname}`); 
+    logger.error(`resourceValue: ${resourceValue}`)
+    logger.error(`match: ${match}`)
+
     if (match) {
         const { resourceType, id } = match.groups!;
         const hostname = match.groups!.hostname ?? defaultHostname;
@@ -98,7 +102,9 @@ export function hasReferenceToResource(
     fhirVersion: FhirVersion,
 ): boolean {
     const { hostname, resourceType, id } = requestorId;
+    console.log("checking the hostname in reference to resource", hostname, resourceType, id); 
     if (hostname !== apiUrl) {
+        console.log("this is the apiUrl in has reference to Resource", apiUrl); 
         // If requester is not from this FHIR Server they must be a fully qualified reference
         return isRequestorReferenced([`${hostname}/${resourceType}/${id}`], resourceType, sourceResource, fhirVersion);
     }
@@ -155,11 +161,17 @@ export function hasAccessToResource(
     fhirVersion: FhirVersion,
     accessModifier: AccessModifier,
 ): boolean {
+
+    console.log('this is fhirUSEROBJECT inside hasAccessToResource', JSON.stringify(fhirUserObject)); 
+    console.log('patientLaunchContext', patientLaunchContext); 
+    console.log('usableScopes', usableScopes); 
+    console.log('sourceResource.resourceType'); 
+    console.log('accessModifier', accessModifier); 
+
     return (
         hasSystemAccess(usableScopes, sourceResource.resourceType, accessModifier) ||
-        (fhirUserObject &&
-            (isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl) ||
-                hasReferenceToResource(fhirUserObject, sourceResource, apiUrl, fhirVersion))) ||
+        (fhirUserObject && (isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl)) ||
+        hasReferenceToResource(fhirUserObject, sourceResource, apiUrl, fhirVersion)) ||
         (patientLaunchContext && hasReferenceToResource(patientLaunchContext, sourceResource, apiUrl, fhirVersion))
     );
 }
