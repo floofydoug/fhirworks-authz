@@ -211,12 +211,12 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
         return url[url.length - 1] === '/' ? url.substr(0, url.length - 1) : url;
     };
 
-    if (removeTrailingSlash(expectedIssValue) !== removeTrailingSlash(iss)) {
-        logger.error(`expectedIss ${expectedIssValue}`);
-        logger.error(`iss ${iss}`);
-        logger.error('access_token has unexpected `iss`');
-        throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
-    }
+    // if (removeTrailingSlash(expectedIssValue) !== removeTrailingSlash(iss)) {
+    //     logger.error(`expectedIss ${expectedIssValue}`);
+    //     logger.error(`iss ${iss}`);
+    //     logger.error('access_token has unexpected `iss`');
+    //     throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
+    // }
 
     let audArray: string[] = [];
     if (aud) {
@@ -241,8 +241,8 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
     console.log('this is the decoded AccessToken', decodedAccessToken);
 
     const formattedAccessToken = { ...decodedAccessToken };
-    formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
-
+    // formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
+    formattedAccessToken.payload.iss = expectedIssValue; 
     console.log('this is formattedAccessTokenNow', formattedAccessToken);
     return formattedAccessToken;
 }
