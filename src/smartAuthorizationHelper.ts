@@ -101,8 +101,10 @@ export function hasReferenceToResource(
     apiUrl: string,
     fhirVersion: FhirVersion,
 ): boolean {
-    const { hostname, resourceType, id } = requestorId;
-    console.log("checking the hostname in reference to resource", hostname, resourceType, id); 
+    const hostname = get(requestorId, 'hostname', ''); 
+    const resourceType = get(requestorId, 'resourceType', 'Patient'); 
+    const id = get(requestorId, 'id', ''); 
+    console.log("checking the hostname in reference to resource", hostname, resourceType, id, apiUrl); 
     if (hostname !== apiUrl) {
         console.log("this is the apiUrl in has reference to Resource", apiUrl); 
         // If requester is not from this FHIR Server they must be a fully qualified reference
@@ -212,8 +214,8 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
     };
 
     // if (removeTrailingSlash(expectedIssValue) !== removeTrailingSlash(iss)) {
-    //     logger.error(`expectedIss ${expectedIssValue}`);
-    //     logger.error(`iss ${iss}`);
+    //     logger.error(`expectedIss: ${expectedIssValue}`);
+    //     logger.error(`iss: ${iss}`);
     //     logger.error('access_token has unexpected `iss`');
     //     throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     // }
@@ -241,7 +243,7 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
     console.log('this is the decoded AccessToken', decodedAccessToken);
 
     const formattedAccessToken = { ...decodedAccessToken };
-    // formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
+    //formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
     formattedAccessToken.payload.iss = expectedIssValue; 
     console.log('this is formattedAccessTokenNow', formattedAccessToken);
     return formattedAccessToken;
@@ -254,7 +256,7 @@ export async function verifyJwtToken(
     client: JwksClient,
 ) {
     const decodedAccessToken = decodeJwtToken(token, expectedAudValue, expectedIssValue);
-    logger.error(`this is aud: ${expectedAudValue}`);
+    logger.error(`this is expected aud: ${expectedAudValue}`);
     logger.error(`this is expectedIssValue: ${expectedIssValue}`);
     logger.error(`HELLO decodedAccessToken: ${JSON.stringify(decodedAccessToken)}`);
     const { kid } = decodedAccessToken.header;

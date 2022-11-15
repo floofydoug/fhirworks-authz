@@ -164,7 +164,7 @@ export function filterOutUnusableScope(
     const filteredScopes: string[] = scopes.filter(
         (scope: string) =>
             ((patientContext && scope.startsWith('patient/')) ||
-                (fhirUser && scope.startsWith('user/')) ||
+                fhirUser ||
                 scope.startsWith('system/')) &&
             isScopeSufficient(
                 scope,
