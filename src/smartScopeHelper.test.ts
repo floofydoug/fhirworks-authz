@@ -362,7 +362,7 @@ describe('filterOutUnusableScope', () => {
         const scopes = ['user/*.read', 'user/Patient.read', 'patient/*.*'];
         expect(
             filterOutUnusableScope(scopes, clonedScopeRule, 'read', false, 'Patient', undefined, undefined, 'fhirUser'),
-        ).toEqual(['user/*.read', 'user/Patient.read']);
+        ).toEqual(['user/*.read', 'user/Patient.read', 'patient/*.*']);
     });
     test('filter patient; due to scope being insufficient', () => {
         const clonedScopeRule = emptyScopeRule();

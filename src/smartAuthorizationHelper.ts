@@ -200,15 +200,13 @@ export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
 }
 
 export function decodeJwtToken(token: string, expectedAudValue: string | RegExp | string[], expectedIssValue: string) {
-    console.log('inside of decode JwtToken', token);
     const decodedAccessToken = decode(token, { complete: true });
     if (decodedAccessToken === null || typeof decodedAccessToken === 'string') {
         logger.error('access_token could not be decoded into an object');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
-    const temp: any = decodedAccessToken;
 
-    const { aud = '' } = decodedAccessToken.payload;
+    const { aud = '', tenant = '' } = decodedAccessToken.payload;
 
     let audArray: string[] = [];
     if (aud) {
@@ -220,25 +218,25 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
     }
 
     const audMatch: boolean = audArray.some((audience: string) => {
-        console.log('this is about ot run audMatch', `${audience}/${temp.tenant}`);
+        console.log('this is about ot run audMatch', `${audience}/${tenant}`);
+
+        logger.error(`expected: ${expectedAudValue}, but got ${audience}`);
+
         return (
-            (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
-            (expectedAudValue instanceof RegExp && expectedAudValue.test(`${audience}/${temp.tenant}`))
+            (typeof expectedAudValue === 'string' && expectedAudValue === `${audience}`) ||
+            (expectedAudValue instanceof RegExp && expectedAudValue.test(`${audience}/${tenant}`))
         );
     });
     if (!audMatch) {
-        logger.error('access_token has unexpected `aud`');
-        logger.error('expected: ', expectedAudValue);
-        logger.error('but got');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
-
+    console.log('IS AUDMATCH TRUTHY', audMatch);
     console.log('this is the decoded AccessToken', decodedAccessToken);
 
     const formattedAccessToken = { ...decodedAccessToken };
     // formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
     formattedAccessToken.payload.iss = expectedIssValue;
-    console.log('this is formattedAccessTokenNow', formattedAccessToken);
+    // console.log('this is formattedAccessTokenNow', formattedAccessToken);
     return formattedAccessToken;
 }
 
@@ -249,11 +247,11 @@ export async function verifyJwtToken(
     client: JwksClient,
 ) {
     const decodedAccessToken = decodeJwtToken(token, expectedAudValue, expectedIssValue);
-    logger.error(`this is expected aud: ${expectedAudValue}`);
-    logger.error(`this is expectedIssValue: ${expectedIssValue}`);
-    logger.error(`HELLO decodedAccessToken: ${JSON.stringify(decodedAccessToken)}`);
+    logger.info(`this is expected aud: ${expectedAudValue}`);
+    logger.info(`this is expectedIssValue: ${expectedIssValue}`);
+    logger.info(`HELLO decodedAccessToken: ${JSON.stringify(decodedAccessToken)}`);
     const { kid } = decodedAccessToken.header;
-    logger.error(`kid ${kid}`);
+    logger.info(`kid ${kid}`);
     if (!kid) {
         logger.error('JWT verification failed. JWT "kid" attribute is required in the header');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
@@ -261,9 +259,9 @@ export async function verifyJwtToken(
 
     try {
         const key = await client.getSigningKeyAsync(kid);
-        logger.error(`Inside verifyJwtToken. Key: ${JSON.stringify(key)}`);
+        logger.info(`Inside verifyJwtToken. Key: ${JSON.stringify(key)}`);
         const publicKey = key.getPublicKey();
-        logger.error(`this is publicKey:  ${publicKey}`);
+        logger.info(`this is publicKey:  ${publicKey}`);
         return verify(token, publicKey, { audience: expectedAudValue, issuer: expectedIssValue });
     } catch (e) {
         logger.error(`custom error in verifyJwt ${JSON.stringify(e)}`);
@@ -281,7 +279,7 @@ export async function introspectJwtToken(
     // used to verify if `iss` or `aud` is valid
     const decodedTokenPayload = decodeJwtToken(token, expectedAudValue, expectedIssValue).payload;
     const { introspectUrl, clientId, clientSecret } = introspectionOptions;
-
+    console.log('introspectUrl', introspectUrl);
     // setup basic authentication
     const username = clientId;
     const password = clientSecret;
