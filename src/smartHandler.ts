@@ -150,7 +150,7 @@ export class SMARTHandler implements Authorization {
         logger.error(`this.isUserScopeAllowedForSystemExport ${this.isUserScopeAllowedForSystemExport}`);
         logger.error(`fhirUserClaimfhirUserClaim ${JSON.stringify(fhirUserClaim)}`);
         logger.error(`patientContextClaim ${patientContextClaim}`);
-        logger.error(`usable scopes ${JSON.stringify(usableScopes)}`); 
+        logger.error(`usable scopes ${JSON.stringify(usableScopes)}`);
         if (!usableScopes.length) {
             logger.error(
                 'User supplied scopes are insufficient',
@@ -182,11 +182,11 @@ export class SMARTHandler implements Authorization {
         }
 
         if (fhirUserClaim) {
-            console.log("we are trying to find the user")
+            console.log('we are trying to find the user');
             userIdentity.fhirUserObject = getFhirUser(fhirUserClaim);
         }
         if (patientContextClaim && usableScopes.some((scope) => scope.startsWith('patient/'))) {
-            logger.error(`do we fall into this tet for scopes and patientContext`)
+            logger.error(`do we fall into this tet for scopes and patientContext`);
             userIdentity.patientLaunchContext = getFhirResource(patientContextClaim, fhirServiceBaseUrl);
         }
         userIdentity.scopes = scopes;
@@ -348,7 +348,7 @@ export class SMARTHandler implements Authorization {
     async authorizeAndFilterReadResponse(request: ReadResponseAuthorizedRequest): Promise<any> {
         const { fhirUserObject, patientLaunchContext, usableScopes, scopes } = request.userIdentity;
 
-        console.log('hey hey hey, this is inside authorizeAndFilterReadResponse', JSON.stringify(request.userIdentity))
+        console.log('hey hey hey, this is inside authorizeAndFilterReadResponse', JSON.stringify(request.userIdentity));
 
         const fhirServiceBaseUrl = request.fhirServiceBaseUrl ?? this.apiUrl;
 

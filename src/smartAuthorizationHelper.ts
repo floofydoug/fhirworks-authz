@@ -14,6 +14,8 @@ import { convertScopeToSmartScope } from './smartScopeHelper';
 
 import getComponentLogger from './loggerBuilder';
 
+const logger = getComponentLogger();
+
 export const FHIR_USER_REGEX =
     /^(?<hostname>(http|https):\/\/([A-Za-z0-9\-\\.:%$_/])+)\/(?<resourceType>Person|Practitioner|RelatedPerson|Patient)\/(?<id>[A-Za-z0-9\-.]+)$/;
 export const FHIR_RESOURCE_REGEX =
@@ -31,9 +33,9 @@ export function getFhirUser(fhirUserValue: string): FhirResource {
 }
 export function getFhirResource(resourceValue: string, defaultHostname: string): FhirResource {
     const match = resourceValue.match(FHIR_RESOURCE_REGEX);
-    logger.error(`defaultHostName: ${defaultHostname}`); 
-    logger.error(`resourceValue: ${resourceValue}`)
-    logger.error(`match: ${match}`)
+    logger.error(`defaultHostName: ${defaultHostname}`);
+    logger.error(`resourceValue: ${resourceValue}`);
+    logger.error(`match: ${match}`);
 
     if (match) {
         const { resourceType, id } = match.groups!;
@@ -42,8 +44,6 @@ export function getFhirResource(resourceValue: string, defaultHostname: string):
     }
     throw new UnauthorizedError('Resource is in the incorrect format');
 }
-
-const logger = getComponentLogger();
 
 function isRequestorReferenced(
     requestorIds: string[],
@@ -101,12 +101,12 @@ export function hasReferenceToResource(
     apiUrl: string,
     fhirVersion: FhirVersion,
 ): boolean {
-    const hostname = get(requestorId, 'hostname', ''); 
-    const resourceType = get(requestorId, 'resourceType', 'Patient'); 
-    const id = get(requestorId, 'id', ''); 
-    console.log("checking the hostname in reference to resource", hostname, resourceType, id, apiUrl); 
+    const hostname = get(requestorId, 'hostname', '');
+    const resourceType = get(requestorId, 'resourceType', 'Patient');
+    const id = get(requestorId, 'id', '');
+    console.log('checking the hostname in reference to resource', hostname, resourceType, id, apiUrl);
     if (hostname !== apiUrl) {
-        console.log("this is the apiUrl in has reference to Resource", apiUrl); 
+        console.log('this is the apiUrl in has reference to Resource', apiUrl);
         // If requester is not from this FHIR Server they must be a fully qualified reference
         return isRequestorReferenced([`${hostname}/${resourceType}/${id}`], resourceType, sourceResource, fhirVersion);
     }
@@ -163,16 +163,15 @@ export function hasAccessToResource(
     fhirVersion: FhirVersion,
     accessModifier: AccessModifier,
 ): boolean {
-
-    console.log('this is fhirUSEROBJECT inside hasAccessToResource', JSON.stringify(fhirUserObject)); 
-    console.log('patientLaunchContext', patientLaunchContext); 
-    console.log('usableScopes', usableScopes); 
-    console.log('sourceResource.resourceType', sourceResource); 
-    console.log('accessModifier', accessModifier); 
+    console.log('this is fhirUSEROBJECT inside hasAccessToResource', JSON.stringify(fhirUserObject));
+    console.log('patientLaunchContext', patientLaunchContext);
+    console.log('usableScopes', usableScopes);
+    console.log('sourceResource.resourceType', sourceResource);
+    console.log('accessModifier', accessModifier);
 
     return (
         hasSystemAccess(usableScopes, sourceResource.resourceType, accessModifier) ||
-        (fhirUserObject && (isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl))) ||
+        (fhirUserObject && isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl)) ||
         hasReferenceToResource(fhirUserObject, sourceResource, apiUrl, fhirVersion) ||
         (patientLaunchContext && hasReferenceToResource(patientLaunchContext, sourceResource, apiUrl, fhirVersion))
     );
@@ -201,26 +200,15 @@ export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
 }
 
 export function decodeJwtToken(token: string, expectedAudValue: string | RegExp | string[], expectedIssValue: string) {
-    
-    console.log("inside of decode JwtToken", token); 
+    console.log('inside of decode JwtToken', token);
     const decodedAccessToken = decode(token, { complete: true });
     if (decodedAccessToken === null || typeof decodedAccessToken === 'string') {
         logger.error('access_token could not be decoded into an object');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
+    const temp: any = decodedAccessToken;
 
-    const { aud = '', iss = '' } = decodedAccessToken.payload;
-
-    const removeTrailingSlash = (url: string) => {
-        return url[url.length - 1] === '/' ? url.substr(0, url.length - 1) : url;
-    };
-
-    // if (removeTrailingSlash(expectedIssValue) !== removeTrailingSlash(iss)) {
-    //     logger.error(`expectedIss: ${expectedIssValue}`);
-    //     logger.error(`iss: ${iss}`);
-    //     logger.error('access_token has unexpected `iss`');
-    //     throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
-    // }
+    const { aud = '' } = decodedAccessToken.payload;
 
     let audArray: string[] = [];
     if (aud) {
@@ -231,27 +219,25 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
         }
     }
 
-
-
     const audMatch: boolean = audArray.some((audience: string) => {
-        console.log("this is about ot run audMatch", audience + `/${decodedAccessToken.tenant}`)
+        console.log('this is about ot run audMatch', `${audience}/${temp.tenant}`);
         return (
             (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
-            (expectedAudValue instanceof RegExp && expectedAudValue.test(audience + `/${decodedAccessToken.tenant}`))
+            (expectedAudValue instanceof RegExp && expectedAudValue.test(`${audience}/${temp.tenant}`))
         );
     });
     if (!audMatch) {
         logger.error('access_token has unexpected `aud`');
         logger.error('expected: ', expectedAudValue);
-        logger.error('but got', )
+        logger.error('but got');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
     console.log('this is the decoded AccessToken', decodedAccessToken);
 
     const formattedAccessToken = { ...decodedAccessToken };
-    //formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
-    formattedAccessToken.payload.iss = expectedIssValue; 
+    // formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
+    formattedAccessToken.payload.iss = expectedIssValue;
     console.log('this is formattedAccessTokenNow', formattedAccessToken);
     return formattedAccessToken;
 }
