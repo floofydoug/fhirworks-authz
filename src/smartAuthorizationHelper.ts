@@ -14,6 +14,8 @@ import { convertScopeToSmartScope } from './smartScopeHelper';
 
 import getComponentLogger from './loggerBuilder';
 
+const logger = getComponentLogger();
+
 export const FHIR_USER_REGEX =
     /^(?<hostname>(http|https):\/\/([A-Za-z0-9\-\\.:%$_/])+)\/(?<resourceType>Person|Practitioner|RelatedPerson|Patient)\/(?<id>[A-Za-z0-9\-.]+)$/;
 export const FHIR_RESOURCE_REGEX =
@@ -31,9 +33,9 @@ export function getFhirUser(fhirUserValue: string): FhirResource {
 }
 export function getFhirResource(resourceValue: string, defaultHostname: string): FhirResource {
     const match = resourceValue.match(FHIR_RESOURCE_REGEX);
-    logger.error(`defaultHostName: ${defaultHostname}`); 
-    logger.error(`resourceValue: ${resourceValue}`)
-    logger.error(`match: ${match}`)
+    logger.error(`defaultHostName: ${defaultHostname}`);
+    logger.error(`resourceValue: ${resourceValue}`);
+    logger.error(`match: ${match}`);
 
     if (match) {
         const { resourceType, id } = match.groups!;
@@ -42,8 +44,6 @@ export function getFhirResource(resourceValue: string, defaultHostname: string):
     }
     throw new UnauthorizedError('Resource is in the incorrect format');
 }
-
-const logger = getComponentLogger();
 
 function isRequestorReferenced(
     requestorIds: string[],
@@ -101,12 +101,12 @@ export function hasReferenceToResource(
     apiUrl: string,
     fhirVersion: FhirVersion,
 ): boolean {
-    const hostname = get(requestorId, 'hostname', ''); 
-    const resourceType = get(requestorId, 'resourceType', 'Patient'); 
-    const id = get(requestorId, 'id', ''); 
-    console.log("checking the hostname in reference to resource", hostname, resourceType, id, apiUrl); 
+    const hostname = get(requestorId, 'hostname', '');
+    const resourceType = get(requestorId, 'resourceType', 'Patient');
+    const id = get(requestorId, 'id', '');
+    console.log('checking the hostname in reference to resource', hostname, resourceType, id, apiUrl);
     if (hostname !== apiUrl) {
-        console.log("this is the apiUrl in has reference to Resource", apiUrl); 
+        console.log('this is the apiUrl in has reference to Resource', apiUrl);
         // If requester is not from this FHIR Server they must be a fully qualified reference
         return isRequestorReferenced([`${hostname}/${resourceType}/${id}`], resourceType, sourceResource, fhirVersion);
     }
@@ -163,22 +163,21 @@ export function hasAccessToResource(
     fhirVersion: FhirVersion,
     accessModifier: AccessModifier,
 ): boolean {
-
-    console.log('this is fhirUSEROBJECT inside hasAccessToResource', JSON.stringify(fhirUserObject)); 
-    console.log('patientLaunchContext', patientLaunchContext); 
-    console.log('usableScopes', usableScopes); 
-    console.log('sourceResource.resourceType', sourceResource); 
-    console.log('accessModifier', accessModifier); 
+    console.log('this is fhirUSEROBJECT inside hasAccessToResource', JSON.stringify(fhirUserObject));
+    console.log('patientLaunchContext', patientLaunchContext);
+    console.log('usableScopes', usableScopes);
+    console.log('sourceResource.resourceType', sourceResource);
+    console.log('accessModifier', accessModifier);
 
     return (
         hasSystemAccess(usableScopes, sourceResource.resourceType, accessModifier) ||
-        (fhirUserObject && (isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl))) ||
+        (fhirUserObject && isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl)) ||
         hasReferenceToResource(fhirUserObject, sourceResource, apiUrl, fhirVersion) ||
         (patientLaunchContext && hasReferenceToResource(patientLaunchContext, sourceResource, apiUrl, fhirVersion))
     );
 }
 export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
-    logger.error(
+    console.log(
         `these are the jwks parameters, ${JSON.stringify({
             cache: true,
             cacheMaxEntries: 5,
@@ -207,18 +206,7 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
-    const { aud = '', iss = '' } = decodedAccessToken.payload;
-
-    const removeTrailingSlash = (url: string) => {
-        return url[url.length - 1] === '/' ? url.substr(0, url.length - 1) : url;
-    };
-
-    // if (removeTrailingSlash(expectedIssValue) !== removeTrailingSlash(iss)) {
-    //     logger.error(`expectedIss: ${expectedIssValue}`);
-    //     logger.error(`iss: ${iss}`);
-    //     logger.error('access_token has unexpected `iss`');
-    //     throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
-    // }
+    const { aud = '', tenant = '' } = decodedAccessToken.payload;
 
     let audArray: string[] = [];
     if (aud) {
@@ -228,24 +216,27 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
             audArray = aud;
         }
     }
+
     const audMatch: boolean = audArray.some((audience: string) => {
+        console.log('this is about ot run audMatch', `${audience}/${tenant}`);
+
+        logger.error(`expected: ${expectedAudValue}, but got ${audience}`);
+
         return (
-            (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
-            (expectedAudValue instanceof RegExp && expectedAudValue.test(audience))
+            (typeof expectedAudValue === 'string' && expectedAudValue === `${audience}`) ||
+            (expectedAudValue instanceof RegExp && expectedAudValue.test(`${audience}/${tenant}`))
         );
     });
     if (!audMatch) {
-        logger.error('access_token has unexpected `aud`');
-        logger.error('expected: ', expectedAudValue);
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
-
+    console.log('IS AUDMATCH TRUTHY', audMatch);
     console.log('this is the decoded AccessToken', decodedAccessToken);
 
     const formattedAccessToken = { ...decodedAccessToken };
-    //formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
-    formattedAccessToken.payload.iss = expectedIssValue; 
-    console.log('this is formattedAccessTokenNow', formattedAccessToken);
+    // formattedAccessToken.payload.iss = removeTrailingSlash(get(decodedAccessToken, 'payload.iss', ''));
+    formattedAccessToken.payload.iss = expectedIssValue;
+    // console.log('this is formattedAccessTokenNow', formattedAccessToken);
     return formattedAccessToken;
 }
 
@@ -256,11 +247,11 @@ export async function verifyJwtToken(
     client: JwksClient,
 ) {
     const decodedAccessToken = decodeJwtToken(token, expectedAudValue, expectedIssValue);
-    logger.error(`this is expected aud: ${expectedAudValue}`);
-    logger.error(`this is expectedIssValue: ${expectedIssValue}`);
-    logger.error(`HELLO decodedAccessToken: ${JSON.stringify(decodedAccessToken)}`);
+    logger.info(`this is expected aud: ${expectedAudValue}`);
+    logger.info(`this is expectedIssValue: ${expectedIssValue}`);
+    logger.info(`HELLO decodedAccessToken: ${JSON.stringify(decodedAccessToken)}`);
     const { kid } = decodedAccessToken.header;
-    logger.error(`kid ${kid}`);
+    logger.info(`kid ${kid}`);
     if (!kid) {
         logger.error('JWT verification failed. JWT "kid" attribute is required in the header');
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
@@ -268,9 +259,9 @@ export async function verifyJwtToken(
 
     try {
         const key = await client.getSigningKeyAsync(kid);
-        logger.error(`Inside verifyJwtToken. Key: ${JSON.stringify(key)}`);
+        logger.info(`Inside verifyJwtToken. Key: ${JSON.stringify(key)}`);
         const publicKey = key.getPublicKey();
-        logger.error(`this is publicKey:  ${publicKey}`);
+        logger.info(`this is publicKey:  ${publicKey}`);
         return verify(token, publicKey, { audience: expectedAudValue, issuer: expectedIssValue });
     } catch (e) {
         logger.error(`custom error in verifyJwt ${JSON.stringify(e)}`);
@@ -288,7 +279,7 @@ export async function introspectJwtToken(
     // used to verify if `iss` or `aud` is valid
     const decodedTokenPayload = decodeJwtToken(token, expectedAudValue, expectedIssValue).payload;
     const { introspectUrl, clientId, clientSecret } = introspectionOptions;
-
+    console.log('introspectUrl', introspectUrl);
     // setup basic authentication
     const username = clientId;
     const password = clientSecret;

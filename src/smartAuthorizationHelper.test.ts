@@ -22,6 +22,9 @@ import {
     introspectJwtToken,
 } from './smartAuthorizationHelper';
 import { FhirResource, IntrospectionOptions } from './smartConfig';
+import getComponentLogger from './loggerBuilder';
+
+const logger = getComponentLogger();
 
 const apiUrl = 'https://fhirServer.com';
 const id = '1234';
@@ -336,8 +339,9 @@ describe('hasReferenceToResource', () => {
 });
 
 // eslint-ignore
-function getDefaultPayload(iat: number, exp: number, aud: string | string[], iss: string | string[]) {
+function getDefaultPayload(iat: number, exp: number, aud: string | string[] | RegExp, iss: string | string[]) {
     return {
+        tenant: 'sitetenant',
         ver: 1,
         iss,
         aud,
@@ -388,17 +392,25 @@ describe('verifyJwt', () => {
     const expectedIssValue = 'https://smart-moyae-dev.us.auth0.com/';
 
     test('JWT is valid and verified', async () => {
+        logger.info('WHERE AM I');
         const payload = getDefaultPayload(
             Math.floor(Date.now() / 1000),
             Math.floor(Date.now() / 1000) + 10,
             [
+                'https://fg93b2lt5i.execute-api.us-east-1.amazonaws.com/dev/tenant',
                 'https://fg93b2lt5i.execute-api.us-east-1.amazonaws.com/dev/tenant/sitetenant',
                 'https://smart-moyae-dev.us.auth0.com/userinfo',
+                'api://default',
             ],
             expectedIssValue,
         );
         const jwt = await getSignedJwt(payload, kid, privateKey);
-        return expect(verifyJwtToken(jwt, expectedAudArrayValue, expectedIssValue, client)).resolves.toEqual(payload);
+        logger.error(`this is jwt, ${jwt}`);
+        logger.error(`verifyJwtToken, ${await verifyJwtToken(jwt, expectedAudArrayValue, expectedIssValue, client)}`);
+
+        return expect(await verifyJwtToken(jwt, expectedAudArrayValue, expectedIssValue, client)).resolves.toEqual(
+            payload,
+        );
     });
 
     test('JWT does not include "kid" attribute in header', async () => {
@@ -409,7 +421,7 @@ describe('verifyJwt', () => {
             expectedIssValue,
         );
         const jwt = await getSignedJwt(payload, kid, privateKey, false);
-        return expect(verifyJwtToken(jwt, expectedAudValue, expectedIssValue, client)).rejects.toThrowError(
+        return expect(await verifyJwtToken(jwt, expectedAudValue, expectedIssValue, client)).rejects.toThrowError(
             new UnauthorizedError('Invalid access token'),
         );
     });
@@ -423,15 +435,15 @@ describe('verifyJwt', () => {
         );
         const jwt = await getSignedJwt(payload, kid, privateKey);
 
-        return expect(verifyJwtToken(jwt, expectedAudValue, expectedIssValue, client)).rejects.toThrowError(
+        return expect(await verifyJwtToken(jwt, expectedAudValue, expectedIssValue, client)).rejects.toThrowError(
             new UnauthorizedError('Invalid access token'),
         );
     });
 
-    test('invalid jwt', () => {
+    test('invalid jwt', async () => {
         const token = 'abc';
 
-        return expect(verifyJwtToken(token, expectedAudValue, expectedIssValue, client)).rejects.toThrowError(
+        return expect(await verifyJwtToken(token, expectedAudValue, expectedIssValue, client)).rejects.toThrowError(
             new UnauthorizedError('Invalid access token'),
         );
     });
@@ -450,7 +462,7 @@ describe('verifyJwt', () => {
             );
             const jwt = await getSignedJwt(payload, kid, privateKey);
             return expect(
-                verifyJwtToken(jwt, expectedAudValue, 'https://exampleAuthServer.com/oauth2', client),
+                await verifyJwtToken(jwt, expectedAudValue, 'https://exampleAuthServer.com/oauth2', client),
             ).rejects.toThrowError(new UnauthorizedError('Invalid access token'));
         });
     });
@@ -467,7 +479,7 @@ describe('verifyJwt', () => {
             );
 
             const jwt = await getSignedJwt(payload, kid, privateKey);
-            return expect(verifyJwtToken(jwt, aud, expectedIssValue, client)).resolves.toEqual(payload);
+            return expect(await verifyJwtToken(jwt, aud, expectedIssValue, client)).resolves.toEqual(payload);
         });
 
         test('aud array contain expected aud value', async () => {
@@ -479,7 +491,7 @@ describe('verifyJwt', () => {
             );
 
             const jwt = await getSignedJwt(payload, kid, privateKey);
-            return expect(verifyJwtToken(jwt, expectedAudArrayValue, expectedIssValue, client)).resolves.toEqual(
+            return expect(await verifyJwtToken(jwt, expectedAudArrayValue, expectedIssValue, client)).resolves.toEqual(
                 payload,
             );
         });
@@ -495,7 +507,7 @@ describe('verifyJwt', () => {
                 expectedIssValue,
             );
             const jwt = await getSignedJwt(payload, kid, privateKey);
-            return expect(verifyJwtToken(jwt, audRegExp, expectedIssValue, client)).resolves.toEqual(payload);
+            return expect(await verifyJwtToken(jwt, audRegExp, expectedIssValue, client)).resolves.toEqual(payload);
         });
     });
 
@@ -507,7 +519,7 @@ describe('verifyJwt', () => {
             expectedIssValue,
         );
         const jwt = await getSignedJwt(payload, kid, privateKey);
-        return expect(verifyJwtToken(jwt, expectedAudValue, 'fakeIss', client)).rejects.toThrowError(
+        return expect(await verifyJwtToken(jwt, expectedAudValue, 'fakeIss', client)).rejects.toThrowError(
             new UnauthorizedError('Invalid access token'),
         );
     });
