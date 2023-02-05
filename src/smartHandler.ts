@@ -354,7 +354,6 @@ export class SMARTHandler implements Authorization {
 
         const { operation, readResponse } = request;
 
-        console.log();
         // If request is a search iterate over every response object
         // Must use all scopes, since a search may return more resourceTypes than just found in usableScopes
         if (SEARCH_OPERATIONS.includes(operation)) {

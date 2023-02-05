@@ -178,7 +178,7 @@ export function hasAccessToResource(
     );
 }
 export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
-    logger.error(
+    console.log(
         `these are the jwks parameters, ${JSON.stringify({
             cache: true,
             cacheMaxEntries: 5,
@@ -201,6 +201,8 @@ export function getJwksClient(jwksUri: string, headers?: Headers): JwksClient {
 }
 
 export function decodeJwtToken(token: string, expectedAudValue: string | RegExp | string[], expectedIssValue: string) {
+    
+    console.log("inside of decode JwtToken", token); 
     const decodedAccessToken = decode(token, { complete: true });
     if (decodedAccessToken === null || typeof decodedAccessToken === 'string') {
         logger.error('access_token could not be decoded into an object');
@@ -228,15 +230,20 @@ export function decodeJwtToken(token: string, expectedAudValue: string | RegExp 
             audArray = aud;
         }
     }
+
+
+
     const audMatch: boolean = audArray.some((audience: string) => {
+        console.log("this is about ot run audMatch", audience + `/${decodedAccessToken.tenant}`)
         return (
             (typeof expectedAudValue === 'string' && expectedAudValue === audience) ||
-            (expectedAudValue instanceof RegExp && expectedAudValue.test(audience))
+            (expectedAudValue instanceof RegExp && expectedAudValue.test(audience + `/${decodedAccessToken.tenant}`))
         );
     });
     if (!audMatch) {
         logger.error('access_token has unexpected `aud`');
         logger.error('expected: ', expectedAudValue);
+        logger.error('but got', )
         throw new UnauthorizedError(GENERIC_ERR_MESSAGE);
     }
 
