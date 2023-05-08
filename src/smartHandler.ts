@@ -190,8 +190,10 @@ export class SMARTHandler implements Authorization {
             userIdentity.patientLaunchContext = getFhirResource(patientContextClaim, fhirServiceBaseUrl);
         }
         console.log('THE WWHOLE REQUEST', JSON.stringify(request));
-        if (userIdentity.tenantId !== get(decodedToken, 'tenantId')) {
+        const requestTenant = request.fhirServiceBaseUrl?.split('/tenant/').pop(); 
+        if (requestTenant !== get(decodedToken, 'tenant')) {
             // verifying the user is a part of the tenant they are querying for.
+            console.log("tenants do not match")
             throw new UnauthorizedError(
                 'User requested an incorrect tenant for the tenant they are currently assigned.',
             );
