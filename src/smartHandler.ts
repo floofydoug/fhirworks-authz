@@ -189,6 +189,13 @@ export class SMARTHandler implements Authorization {
             logger.error(`do we fall into this tet for scopes and patientContext`);
             userIdentity.patientLaunchContext = getFhirResource(patientContextClaim, fhirServiceBaseUrl);
         }
+        console.log('THE WWHOLE REQUEST', JSON.stringify(request));
+        if (userIdentity.tenantId !== get(decodedToken, 'tenantId')) {
+            // verifying the user is a part of the tenant they are querying for.
+            throw new UnauthorizedError(
+                'User requested an incorrect tenant for the tenant they are currently assigned.',
+            );
+        }
         userIdentity.scopes = scopes;
         userIdentity.usableScopes = usableScopes;
 

@@ -171,8 +171,9 @@ export function hasAccessToResource(
 
     return (
         hasSystemAccess(usableScopes, sourceResource.resourceType, accessModifier) ||
-        (fhirUserObject && isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl)) ||
-        hasReferenceToResource(fhirUserObject, sourceResource, apiUrl, fhirVersion) ||
+        (fhirUserObject &&
+            (isFhirUserAdmin(fhirUserObject, adminAccessTypes, apiUrl) ||
+                hasReferenceToResource(fhirUserObject, sourceResource, apiUrl, fhirVersion))) ||
         (patientLaunchContext && hasReferenceToResource(patientLaunchContext, sourceResource, apiUrl, fhirVersion))
     );
 }
